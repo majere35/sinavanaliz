@@ -95,10 +95,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return { ...d, students: d.students.filter((x) => x.id !== id), results };
         }),
       saveExam: (e) =>
-        mutate((d) => ({
-          ...d,
-          exams: d.exams.some((x) => x.id === e.id) ? d.exams.map((x) => (x.id === e.id ? e : x)) : [...d.exams, e],
-        })),
+        mutate((d) => {
+          // Sınavdan çıkarılan derslerin sonuçları yetim kalmasın
+          const keep = new Set(e.subjects.map((s) => s.id));
+          const examResults: Record<string, Record<string, Score>> = {};
+          for (const [sid, row] of Object.entries(d.results[e.id] ?? {})) {
+            const pruned: Record<string, Score> = {};
+            for (const [subId, sc] of Object.entries(row)) if (keep.has(subId)) pruned[subId] = sc;
+            if (Object.keys(pruned).length) examResults[sid] = pruned;
+          }
+          return {
+            ...d,
+            exams: d.exams.some((x) => x.id === e.id) ? d.exams.map((x) => (x.id === e.id ? e : x)) : [...d.exams, e],
+            results: { ...d.results, [e.id]: examResults },
+          };
+        }),
       deleteExam: (id) =>
         mutate((d) => {
           const { [id]: _, ...results } = d.results;
