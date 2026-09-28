@@ -144,22 +144,25 @@ h1, h2, h3 { margin: 0; font-weight: 800; letter-spacing: -0.01em; }
 
 /* ---------- Sonuç giriş ızgarası ---------- */
 .entry-wrap { overflow: auto; max-height: calc(100vh - 250px); }
-.entry { border-collapse: separate; border-spacing: 0; font-size: 14px; min-width: 100%; }
-.entry th, .entry td { border-bottom: 1px solid var(--line); padding: 6px 6px; text-align: center; white-space: nowrap; }
-.entry thead th { position: sticky; top: 0; background: #fff; z-index: 2; font-size: 12px; }
-.entry thead tr:nth-child(2) th { top: 38px; color: var(--muted); font-weight: 700; }
-.entry .sticky { position: sticky; left: 0; background: #fff; z-index: 1; text-align: left; min-width: 190px; }
+.entry { border-collapse: separate; border-spacing: 0; font-size: 14px; }
+.entry th, .entry td { border-bottom: 1px solid var(--line); padding: 8px 12px; text-align: center; white-space: nowrap; vertical-align: middle; }
+.entry thead th { position: sticky; top: 0; background: #fff; z-index: 2; font-size: 13px; vertical-align: bottom; }
+.entry .sticky { position: sticky; left: 0; background: #fff; z-index: 1; text-align: left; min-width: 200px; }
 .entry thead .sticky { z-index: 3; }
 .entry .subj-head { border-left: 2px solid var(--line); }
-.entry .d-col { border-left: 2px solid var(--line); }
-.cell { width: 44px; text-align: center; border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 2px; font-weight: 700; outline: none; background: #fff; }
+.subj-title { font-weight: 800; margin-bottom: 6px; }
+.subj-title span { color: var(--muted); font-weight: 600; }
+/* D | Y | B: sabit genişlikli üçlü — başlık ve hücreler aynı ızgarayı kullanır */
+.dyb { display: grid; grid-template-columns: 48px 48px 30px; gap: 6px; align-items: center; justify-content: center; }
+.dyb-labels span { font-size: 12px; font-weight: 800; color: var(--muted); }
+.cell { width: 48px; height: 38px; text-align: center; border: 1.5px solid var(--line); border-radius: 8px; padding: 0; font-weight: 700; font-size: 15px; outline: none; background: #fff; }
 .cell:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47, 99, 209, 0.15); }
 .cell.d { color: #13924e; }
 .cell.y { color: var(--red); }
 .cell.err { border-color: var(--red); background: #fff0f1; }
-.bcell { color: var(--muted); font-weight: 700; min-width: 28px; }
+.bcell { color: var(--muted); font-weight: 700; text-align: center; }
 .bcell.err { color: var(--red); }
-.netcell { font-weight: 800; color: var(--navy); min-width: 64px; }
+.netcell { font-weight: 800; color: var(--navy); min-width: 90px; font-size: 16px; }
 .entry tbody tr:hover td { background: #f7f9ff; }
 
 /* ---------- Boş durum ---------- */

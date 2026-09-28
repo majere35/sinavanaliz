@@ -68,28 +68,20 @@ export function EntryPage({ examId, onExamChange }: { examId: string | null; onE
         <table className="entry">
           <thead>
             <tr>
-              <th className="sticky" rowSpan={2}>
-                Öğrenci
-              </th>
+              <th className="sticky">Öğrenci</th>
               {exam.subjects.map((s) => (
-                <th key={s.id} colSpan={3} className="subj-head">
-                  {s.name} <span style={{ color: 'var(--muted)', fontWeight: 600 }}>({s.questions})</span>
+                <th key={s.id} className="subj-head">
+                  <div className="subj-title">
+                    {s.name} <span>({s.questions})</span>
+                  </div>
+                  <div className="dyb dyb-labels">
+                    <span style={{ color: '#13924e' }}>D</span>
+                    <span style={{ color: 'var(--red)' }}>Y</span>
+                    <span>B</span>
+                  </div>
                 </th>
               ))}
-              <th rowSpan={2} className="subj-head">
-                Toplam net
-              </th>
-            </tr>
-            <tr>
-              {exam.subjects.map((s) => [
-                <th key={s.id + 'd'} className="d-col" style={{ color: '#13924e' }}>
-                  D
-                </th>,
-                <th key={s.id + 'y'} style={{ color: 'var(--red)' }}>
-                  Y
-                </th>,
-                <th key={s.id + 'b'}>B</th>,
-              ])}
+              <th className="subj-head">Toplam net</th>
             </tr>
           </thead>
           <tbody>
@@ -158,37 +150,37 @@ function Row({ r, exam, student, scores, onScore, move }: RowProps) {
         const sc = scores[s.id];
         const err = sc ? scoreError(s.questions, sc) : null;
         const b = sc ? blank(s.questions, sc) : null;
-        return [
-          <td key={s.id + 'd'} className="d-col">
-            <input
-              className={`cell d ${err ? 'err' : ''}`}
-              inputMode="numeric"
-              data-r={r}
-              data-c={k * 2}
-              value={sc ? String(sc.d) : ''}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => update(s.id, 'd', e.target.value)}
-              onKeyDown={(e) => onKey(e, k * 2)}
-              aria-label={`${student.name} ${s.name} doğru`}
-            />
-          </td>,
-          <td key={s.id + 'y'}>
-            <input
-              className={`cell y ${err ? 'err' : ''}`}
-              inputMode="numeric"
-              data-r={r}
-              data-c={k * 2 + 1}
-              value={sc ? String(sc.y) : ''}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => update(s.id, 'y', e.target.value)}
-              onKeyDown={(e) => onKey(e, k * 2 + 1)}
-              aria-label={`${student.name} ${s.name} yanlış`}
-            />
-          </td>,
-          <td key={s.id + 'b'} className={`bcell ${err ? 'err' : ''}`} title={err === 'overflow' ? `D + Y, ${s.questions} soruyu aşıyor` : undefined}>
-            {b === null ? '' : err ? '!' : b}
-          </td>,
-        ];
+        return (
+          <td key={s.id} className="subj-head">
+            <div className="dyb">
+              <input
+                className={`cell d ${err ? 'err' : ''}`}
+                inputMode="numeric"
+                data-r={r}
+                data-c={k * 2}
+                value={sc ? String(sc.d) : ''}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => update(s.id, 'd', e.target.value)}
+                onKeyDown={(e) => onKey(e, k * 2)}
+                aria-label={`${student.name} ${s.name} doğru`}
+              />
+              <input
+                className={`cell y ${err ? 'err' : ''}`}
+                inputMode="numeric"
+                data-r={r}
+                data-c={k * 2 + 1}
+                value={sc ? String(sc.y) : ''}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => update(s.id, 'y', e.target.value)}
+                onKeyDown={(e) => onKey(e, k * 2 + 1)}
+                aria-label={`${student.name} ${s.name} yanlış`}
+              />
+              <span className={`bcell ${err ? 'err' : ''}`} title={err === 'overflow' ? `D + Y, ${s.questions} soruyu aşıyor` : undefined}>
+                {b === null ? '' : err ? '!' : b}
+              </span>
+            </div>
+          </td>
+        );
       })}
       <td className="netcell subj-head">{has ? fmt(total) : '—'}</td>
     </tr>
