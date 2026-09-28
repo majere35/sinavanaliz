@@ -9,14 +9,16 @@ import { EntryPage } from './pages/EntryPage';
 import { ExamsPage } from './pages/ExamsPage';
 import { ReportPage } from './pages/ReportPage';
 import { StudentsPage } from './pages/StudentsPage';
-import { Presentation } from './Presentation';
+import { GroupPage, type GroupView } from './pages/GroupPage';
+import { Presentation, type Scene } from './Presentation';
 
-type Tab = 'students' | 'exams' | 'entry' | 'report';
+type Tab = 'students' | 'exams' | 'entry' | 'report' | 'group';
 const TABS: { id: Tab; label: string }[] = [
   { id: 'students', label: '👩‍🎓 Öğrenciler' },
   { id: 'exams', label: '📝 Sınavlar' },
   { id: 'entry', label: '✏️ Sonuç girişi' },
   { id: 'report', label: '📊 Karne' },
+  { id: 'group', label: '👥 Grup' },
 ];
 
 export default function App() {
@@ -25,7 +27,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('students');
   const [examId, setExamId] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
-  const [presenting, setPresenting] = useState<{ studentId: string | null } | null>(null);
+  const [presenting, setPresenting] = useState<Scene | null>(null);
+  const [groupView, setGroupView] = useState<GroupView>('group');
   const [toast, setToast] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -104,7 +107,7 @@ export default function App() {
             <button className="btn small on-dark" onClick={exportPresentation} title="USB için tek dosyalık sunum">
               💽 Sunum dosyası
             </button>
-            <button className="btn small orange" onClick={() => setPresenting({ studentId: null })}>
+            <button className="btn small orange" onClick={() => setPresenting({ kind: 'welcome' })}>
               ▶ Sunumu başlat
             </button>
             <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => restore(e.target.files?.[0])} />
@@ -160,11 +163,13 @@ export default function App() {
         />
       ) : tab === 'entry' ? (
         <EntryPage examId={examId} onExamChange={setExamId} />
+      ) : tab === 'report' ? (
+        <ReportPage data={data} studentId={studentId} onStudentChange={setStudentId} onPresent={(id) => setPresenting({ kind: 'student', id })} />
       ) : (
-        <ReportPage data={data} studentId={studentId} onStudentChange={setStudentId} onPresent={(id) => setPresenting({ studentId: id })} />
+        <GroupPage data={data} view={groupView} onViewChange={setGroupView} onPresent={(v) => setPresenting({ kind: v })} />
       )}
 
-      {presenting && <Presentation data={data} initialStudentId={presenting.studentId} onExit={() => setPresenting(null)} />}
+      {presenting && <Presentation data={data} initial={presenting} onExit={() => setPresenting(null)} />}
       <Toast message={toast} />
     </>
   );

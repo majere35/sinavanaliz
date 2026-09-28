@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import logo from '../assets/logo.png';
 import { fieldLabel } from '../domain/exams';
 import type { AppData } from '../domain/types';
+import { GroupBoard } from './GroupBoard';
+import { RaceBoard } from './RaceBoard';
 import { ReportCard } from './ReportCard';
 import { Shapes } from './Shapes';
 import { avatarColor, groupBy, initials } from './util';
@@ -17,23 +19,26 @@ function loadReduce(): boolean {
   }
 }
 
+export type Scene = { kind: 'welcome' } | { kind: 'student'; id: string } | { kind: 'group' } | { kind: 'race' };
+
 interface Props {
   data: AppData;
   /** Panelden açıldıysa çıkış; sunum dosyasında yok. */
   onExit?: () => void;
-  initialStudentId?: string | null;
+  initial?: Scene;
 }
 
-export function Presentation({ data, onExit, initialStudentId = null }: Props) {
-  const [studentId, setStudentId] = useState<string | null>(initialStudentId);
+export function Presentation({ data, onExit, initial = { kind: 'welcome' } }: Props) {
+  const [scene, setScene] = useState<Scene>(initial);
   const [picker, setPicker] = useState(false);
   const [replay, setReplay] = useState(0);
   const [reduce, setReduce] = useState(loadReduce);
-  const student = data.students.find((s) => s.id === studentId) ?? null;
+  const student = scene.kind === 'student' ? data.students.find((s) => s.id === scene.id) ?? null : null;
+  const sceneKey = scene.kind === 'student' ? `s-${scene.id}` : scene.kind;
 
-  const choose = (id: string | null) => {
+  const choose = (next: Scene) => {
     setPicker(false);
-    setStudentId(id);
+    setScene(next);
     setReplay((r) => r + 1);
   };
 
@@ -79,9 +84,9 @@ export function Presentation({ data, onExit, initialStudentId = null }: Props) {
         <Shapes />
 
         <AnimatePresence mode="wait">
-          {student ? (
-            <motion.div key={`${student.id}-${replay}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-              <ReportCard data={data} student={student} />
+          {scene.kind !== 'welcome' && (student || scene.kind !== 'student') ? (
+            <motion.div key={`${sceneKey}-${replay}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+              {student ? <ReportCard data={data} student={student} /> : scene.kind === 'group' ? <GroupBoard data={data} /> : <RaceBoard data={data} />}
             </motion.div>
           ) : (
             <motion.div key={`welcome-${replay}`} className="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -104,9 +109,9 @@ export function Presentation({ data, onExit, initialStudentId = null }: Props) {
 
         {/* Perde geçişi: öğrenci değişince ekranı turuncu-mavi bir şerit süpürür */}
         <AnimatePresence>
-          {student && !reduce && (
+          {scene.kind !== 'welcome' && !reduce && (
             <motion.div
-              key={`wipe-${student.id}-${replay}`}
+              key={`wipe-${sceneKey}-${replay}`}
               style={{ position: 'fixed', inset: 0, zIndex: 65, background: 'linear-gradient(100deg, #f07a2b, #3b38a6)', pointerEvents: 'none' }}
               initial={{ x: '-100%' }}
               animate={{ x: '100%' }}
@@ -116,7 +121,7 @@ export function Presentation({ data, onExit, initialStudentId = null }: Props) {
         </AnimatePresence>
 
         <div className="present-controls">
-          {student && (
+          {scene.kind !== 'welcome' && (
             <button className="btn small on-dark" onClick={() => setReplay((r) => r + 1)} title="Animasyonları baştan oynat (R)">
               ↻ Tekrar oynat
             </button>
@@ -149,17 +154,25 @@ export function Presentation({ data, onExit, initialStudentId = null }: Props) {
                 transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2>Kimin karnesini açalım?</h2>
-                <p>Seçim yapınca liste kapanır; ekranda yalnız seçilen öğrenci görünür.</p>
-                <button className="btn on-dark" onClick={() => choose(null)}>
-                  🏠 Karşılama ekranı
-                </button>
+                <h2>Ne gösterelim?</h2>
+                <p>Seçim yapınca liste kapanır; öğrenci seçilirse ekranda yalnız o öğrenci görünür.</p>
+                <div className="scene-tiles">
+                  <button className="scene-tile group" onClick={() => choose({ kind: 'group' })}>
+                    <span>👥</span>Grup genel bakış
+                  </button>
+                  <button className="scene-tile race" onClick={() => choose({ kind: 'race' })}>
+                    <span>🏁</span>Net yarışı
+                  </button>
+                  <button className="scene-tile" onClick={() => choose({ kind: 'welcome' })}>
+                    <span>🏠</span>Karşılama ekranı
+                  </button>
+                </div>
                 {groups.map(([section, list]) => (
                   <div key={section}>
                     <div className="picker-section">{section}</div>
                     <div className="picker-grid">
                       {list.map((s) => (
-                        <button key={s.id} className="pick" onClick={() => choose(s.id)}>
+                        <button key={s.id} className="pick" onClick={() => choose({ kind: 'student', id: s.id })}>
                           <span className="avatar" style={{ background: avatarColor(s.id) }}>
                             {initials(s.name)}
                           </span>

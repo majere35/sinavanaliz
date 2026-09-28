@@ -5,6 +5,7 @@ import { compareSubjects, fmt, isRecord, mostImproved, targetFor, timeline } fro
 import { fieldLabel } from '../domain/exams';
 import type { AppData, Student, Track } from '../domain/types';
 import { CountUp } from './charts/CountUp';
+import { ExamMatrix } from './ExamMatrix';
 import { Delta } from './charts/Delta';
 import { JourneyChart } from './charts/JourneyChart';
 import { Radar } from './charts/Radar';
@@ -33,6 +34,7 @@ export function ReportCard({ data, student }: { data: AppData; student: Student 
   const [track, setTrack] = useState<Track>(defaultTrack);
   const line = track === 'TYT' ? tyt : ayt;
   const [sel, setSel] = useState(line.length - 1);
+  const [view, setView] = useState<'card' | 'matrix'>('card');
   const idx = Math.min(Math.max(sel, 0), line.length - 1);
 
   const switchTrack = (t: Track) => {
@@ -70,7 +72,20 @@ export function ReportCard({ data, student }: { data: AppData; student: Student 
             </button>
           ))}
         </div>
-        <div className="exam-chips">
+        <div className="pill-group">
+          {(
+            [
+              ['card', '📊 Karne'],
+              ['matrix', '📋 Karşılaştırma'],
+            ] as const
+          ).map(([v, label]) => (
+            <button key={v} className={`pill ${view === v ? 'on' : ''}`} onClick={() => setView(v)}>
+              {view === v && <motion.div layoutId={`view-${student.id}`} className="pill-bg" transition={{ type: 'spring', stiffness: 400, damping: 32 }} />}
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+        <div className="exam-chips" style={{ visibility: view === 'card' ? 'visible' : 'hidden' }}>
           {line.map((r, i) => (
             <button key={r.exam.id} className={`exam-chip ${i === idx ? 'on' : ''}`} onClick={() => setSel(i)}>
               {r.exam.name}
@@ -131,6 +146,11 @@ export function ReportCard({ data, student }: { data: AppData; student: Student 
       {!current ? (
         <motion.div className="glass rc-empty" {...rise(0.2)}>
           Bu öğrenci için henüz {track === 'TYT' ? 'TYT' : aytLabel} sonucu girilmemiş.
+        </motion.div>
+      ) : view === 'matrix' ? (
+        <motion.div key={`mx-${track}`} className="glass panel-pad" {...rise(0.15)}>
+          <div className="glass-title">📋 Tüm sınavlar — ders ders karşılaştırma</div>
+          <ExamMatrix line={line} />
         </motion.div>
       ) : (
         <AnimatePresence mode="wait">
